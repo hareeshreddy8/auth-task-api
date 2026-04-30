@@ -60,3 +60,43 @@ def login_user(username,password,get_user_details):
             "msg":"Invalid credentials. "
             } 
 
+#logic to add task into database for specific user 
+
+def add_task_logic(user_id,name,priority,due_date,all_users,database_func):
+    all_userids = [u[1] for u in all_users()]
+
+    if user_id not in all_userids:
+        return None,("Invalid Userid. ",400)
+    
+    if not name.strip():
+        return None,("Invalid task name. ",400)
+    
+    priority = priority.lower()
+    if priority not in {"high","medium","low"}:
+        return None,("Invalid priority. ",400)
+    
+    data = database_func(user_id,name,priority,due_date)
+    return data,None
+
+
+def update_task_user(user_id,task_id,update_task_database):
+    
+    updated_task = update_task_database(user_id,task_id)
+
+    if not updated_task:
+        return None,("No tasks found",404)
+    
+    return updated_task,None
+
+
+def delete_task(task_id, user_id, database_func):
+    
+    if task_id <= 0:
+        return None, ("Invalid task id", 400)
+
+    deleted = database_func(task_id, user_id)
+
+    if not deleted:
+        return None, ("Task not found", 404)
+
+    return True, None

@@ -18,13 +18,13 @@ def create_table_users():
     conn.commit()
     conn.close()
 
-def usernames():
+def users():
     conn = get_connection_users()
     cursor = conn.cursor()
-    cursor.execute("""SELECT username FROM users """)
-    all_usernames = cursor.fetchall()
+    cursor.execute("""SELECT username,id FROM users """)
+    all_users = cursor.fetchall()
 
-    return all_usernames
+    return all_users
 
 def insert_user(username,password):
     conn = get_connection_users()
@@ -85,4 +85,89 @@ def create_table_tasks():
     conn.commit()
     conn.close()
 
+
+def insert_task_for_user(user_id,name,priority,due_date):
+    conn = get_connection_tasks()
+
+    cursor = conn.cursor()
+
+    cursor.execute("INSERT INTO tasks (user_id,name,priority,due_date) VALUES (?,?,?,?)",(user_id,name,priority,due_date))
+    conn.commit()
+
     
+    conn.close()
+
+    return {"user_id" : user_id,
+        "name" : name,
+        "priority": priority,
+        "due_date": due_date
+        }
+
+def get_all_tasks(user_id):
+    conn = get_connection_tasks()
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tasks WHERE user_id = ?",(user_id,))
+    rows = cursor.fetchall()
+
+    conn.close()
+    tasks = []
+    #converting tuple data into json format for api
+    for row in rows:
+        task = {
+            
+            "id": row[0],
+            "user_id": row[1],
+            "name": row[2],
+            "priority": row[3],
+            "due_date": row[4],
+            "status": bool(row[5])
+        }
+
+        tasks.append(task)
+    return tasks
+
+def update_task_user(user_id,task_id):
+    conn = get_connection_tasks()
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    UPDATE tasks
+    SET status = 1
+    WHERE user_id = ?
+    AND id = ?
+    """,(user_id,task_id))
+    conn.commit()
+
+    cursor.execute("SELECT * FROM tasks WHERE user_id = ? AND id = ?",(user_id,task_id))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {
+            "id": row[0],
+            "user_id": row[1],
+            "name": row[2],
+            "priority": row[3],
+            "due_date": row[4],
+            "status": bool(row[5])
+        }
+    return None
+
+def delete_task_user(user_id,task_id):
+    conn = get_connection_tasks()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM tasks
+        WHERE user_id = ?
+        AND id = ?
+        """,(user_id,task_id))
+    
+    conn.commit()
+    if cursor.rowcount == 0:
+        conn.close()
+        return False
+
+    conn.close()
+    return True
