@@ -154,15 +154,15 @@ def update_task_user(user_id,task_id):
         }
     return None
 
-def delete_task_user(user_id,task_id):
+def delete_task_user(task_id,user_id):
     conn = get_connection_tasks()
     cursor = conn.cursor()
 
     cursor.execute("""
         DELETE FROM tasks
-        WHERE user_id = ?
-        AND id = ?
-        """,(user_id,task_id))
+        WHERE id = ?
+        AND user_id = ?
+        """,(task_id,user_id))
     
     conn.commit()
     if cursor.rowcount == 0:

@@ -1,7 +1,24 @@
 from passlib.context import CryptContext
+from jose import jwt
+from datetime import datetime,timedelta
+
 
 #using passlib to hash the password(oneway)
 pwd_context = CryptContext(schemes= ["bcrypt"],deprecated = "auto")
+SECRET_KEY = "your-secret-key"
+ALGORITHM = "HS256"
+
+def create_token(user_id):
+    payload = {
+        "user_id": user_id,
+        "exp": datetime.utcnow() + timedelta(hours=2)
+    }
+    token = jwt.encode(payload,SECRET_KEY,algorithm=ALGORITHM)
+    return token
+
+def decode_token(token:str):
+    payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+    return payload["user_id"]
 
 def hashing_password(password):
     print("PASSWORD LENGTH:", len(password.encode("utf-8")))
@@ -44,21 +61,16 @@ def login_user(username,password,get_user_details):
     user_details = get_user_details(username)
 
     if not user_details:
-        return {
-            "msg":"Invalid credentials. "
-            }
+        return None,("invalid credentials. ",400)
     
-    password_hash = user_details.get("password",0)
+    password_hash = user_details.get("password")
 
     if pwd_context.verify(password,password_hash):
-        return {
-            "msg": "login successfull. "
-        }
-    
+        return user_details.get("id"),None
+        
+        
     else:
-        return {
-            "msg":"Invalid credentials. "
-            } 
+        return None,("invalid credentials. ",400)
 
 #logic to add task into database for specific user 
 
@@ -79,7 +91,7 @@ def add_task_logic(user_id,name,priority,due_date,all_users,database_func):
     return data,None
 
 
-def update_task_user(user_id,task_id,update_task_database):
+def complete_task(user_id,task_id,update_task_database):
     
     updated_task = update_task_database(user_id,task_id)
 
