@@ -1,9 +1,11 @@
 from fastapi import FastAPI,HTTPException
-from fastapi import Header,Depends
+from fastapi import Depends
 from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
 from models import Usercreate,Userlogin,TaskCreate
 import database
-import auth
+import task_manager,auth
+
+
 
 database.create_table_users()
 database.create_table_tasks()
@@ -12,7 +14,7 @@ security = HTTPBearer()
 
 @auth_app.post("/users",status_code=200)
 def signup_user_api(user_details : Usercreate):
-    data, error = auth.signup_user(user_details.username,user_details.password,database.users,database.insert_user)
+    data, error = auth.signup_user(user_details.username,user_details.password)
 
     if error :
         msg , code = error 
@@ -27,8 +29,7 @@ def signup_user_api(user_details : Usercreate):
 def login_user_request(user_details : Userlogin):
     user_id, error = auth.login_user(
         user_details.username,
-        user_details.password,
-        database.get_user_by_username
+        user_details.password
     )
 
     if error:
@@ -38,61 +39,65 @@ def login_user_request(user_details : Userlogin):
     token = auth.create_token(user_id)
 
     return {
+        "message": "login successfull. ",
         "access_token": token
     }
 
-def get_user_id(token: str):
-    return auth.decode_token(token)
 
 
 @auth_app.post("/tasks",status_code=200)
 def add_task_api(task: TaskCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
-    user_id = get_user_id(token)
+    user_id = auth.decode_token(token)
     
-    data,error = auth.add_task_logic(user_id,task.name,task.priority,task.due_date,database.users,database.insert_task_for_user)
+    data,error = task_manager.add_task_logic(user_id,task.name,task.priority,task.due_date)
 
     if error:
         msg,code = error
         raise HTTPException(status_code=code,detail=msg)
     
-    return data
+    return {
+        "message": "Task created successfully. ",
+        "data": data
+    }
 
 @auth_app.get("/tasks",status_code=200)
-def get_all_task_user(credentials:HTTPAuthorizationCredentials = Depends(security)):
+def fetch_all_task_user(credentials:HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
-    user_id = get_user_id(token)
+    user_id = auth.decode_token(token)
 
-    tasks = database.get_all_tasks(user_id)
+    tasks = task_manager.fetch_tasks(user_id)
     if not tasks :
         raise HTTPException(status_code=400,detail="no tasks found")
-    return tasks
+    return {
+        "message": "Tasks fetched successfully",
+        "data": tasks
+    }
 
 @auth_app.patch("/tasks/{task_id}/complete",status_code=200)
 def complete_tasks_api(task_id : int,credentials:HTTPAuthorizationCredentials=Depends(security)):
     token = credentials.credentials
-    user_id = get_user_id(token)
+    user_id = auth.decode_token(token)
 
-    updated_task , error = auth.complete_task(user_id,task_id ,database.update_task_user)
+    updated_task , error = task_manager.complete_task(user_id,task_id)
 
     if error:
         msg,code = error
         raise HTTPException(status_code=code,detail = msg)
     
     return {
-        "msg": "task marked successfully. ",
+        "message": "task marked successfully. ",
         "data": updated_task
     }
 
 @auth_app.delete("/tasks/{task_id}", status_code=200)
 def delete_task_api(task_id: int,credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
-    user_id = get_user_id(token)
+    user_id = auth.decode_token(token)
 
-    deleted_task, error = auth.delete_task(
+    deleted_task, error = task_manager.delete_task(
         task_id,
-        user_id,
-        database.delete_task_user
+        user_id
     )
 
     if error:
@@ -100,5 +105,5 @@ def delete_task_api(task_id: int,credentials: HTTPAuthorizationCredentials = Dep
         raise HTTPException(status_code=code, detail=msg)
 
     return {
-        "message": "Task deleted successfully"
+        "message": f"Task with task id {task_id} deleted successfully"
     }

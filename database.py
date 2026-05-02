@@ -103,7 +103,7 @@ def insert_task_for_user(user_id,name,priority,due_date):
         "due_date": due_date
         }
 
-def get_all_tasks(user_id):
+def get_all_tasks_by_user(user_id):
     conn = get_connection_tasks()
 
     cursor = conn.cursor()
@@ -127,7 +127,7 @@ def get_all_tasks(user_id):
         tasks.append(task)
     return tasks
 
-def update_task_user(user_id,task_id):
+def complete_task_by_user(user_id,task_id):
     conn = get_connection_tasks()
 
     cursor = conn.cursor()
@@ -154,7 +154,7 @@ def update_task_user(user_id,task_id):
         }
     return None
 
-def delete_task_user(task_id,user_id):
+def delete_task_by_user(task_id,user_id):
     conn = get_connection_tasks()
     cursor = conn.cursor()
 

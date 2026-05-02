@@ -1,6 +1,7 @@
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime,timedelta
+import database
 
 
 #using passlib to hash the password(oneway)
@@ -26,7 +27,7 @@ def hashing_password(password):
 
 
 #signinup user
-def signup_user(username,password,all_usernames,database_insertuser):
+def signup_user(username,password):
     # print("SIGNUP FUNCTION EXECUTED")
     
     #passsword must be lesss thand 72 bytes
@@ -43,7 +44,7 @@ def signup_user(username,password,all_usernames,database_insertuser):
     if len(username) > 20 :
         return None,("Username is too long(max 20 characters)",400)
     
-    usernames = [u[0] for u in all_usernames()]
+    usernames = [u[0] for u in database.users()]
     if username in usernames:
         return None,("Username already exists",400)
     
@@ -51,14 +52,14 @@ def signup_user(username,password,all_usernames,database_insertuser):
     if not password:
         return None,("invalid password",400)
     
-    user_details = database_insertuser(username,password)
+    user_details = database.insert_user(username,password)
     
     return user_details,None
 
 
-def login_user(username,password,get_user_details):
+def login_user(username,password):
 
-    user_details = get_user_details(username)
+    user_details = database.get_user_by_username(username)
 
     if not user_details:
         return None,("invalid credentials. ",400)
@@ -71,44 +72,4 @@ def login_user(username,password,get_user_details):
         
     else:
         return None,("invalid credentials. ",400)
-
-#logic to add task into database for specific user 
-
-def add_task_logic(user_id,name,priority,due_date,all_users,database_func):
-    all_userids = [u[1] for u in all_users()]
-
-    if user_id not in all_userids:
-        return None,("Invalid Userid. ",400)
     
-    if not name.strip():
-        return None,("Invalid task name. ",400)
-    
-    priority = priority.lower()
-    if priority not in {"high","medium","low"}:
-        return None,("Invalid priority. ",400)
-    
-    data = database_func(user_id,name,priority,due_date)
-    return data,None
-
-
-def complete_task(user_id,task_id,update_task_database):
-    
-    updated_task = update_task_database(user_id,task_id)
-
-    if not updated_task:
-        return None,("No tasks found",404)
-    
-    return updated_task,None
-
-
-def delete_task(task_id, user_id, database_func):
-    
-    if task_id <= 0:
-        return None, ("Invalid task id", 400)
-
-    deleted = database_func(task_id, user_id)
-
-    if not deleted:
-        return None, ("Task not found", 404)
-
-    return True, None
