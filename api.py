@@ -31,7 +31,8 @@ def login_user_request(user_details : Userlogin):
         user_details.username,
         user_details.password
     )
-
+    if not user_id :
+        raise HTTPException(status_code=401,detail="unauthorized. ")
     if error:
         msg, code = error
         raise HTTPException(status_code=code, detail=msg)
@@ -49,6 +50,8 @@ def login_user_request(user_details : Userlogin):
 def add_task_api(task: TaskCreate, credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_id = auth.decode_token(token)
+    if not user_id :
+        raise HTTPException(status_code=401,detail="unauthorized. ")
     
     data,error = task_manager.add_task_logic(user_id,task.name,task.priority,task.due_date)
 
@@ -66,6 +69,9 @@ def fetch_all_task_user(credentials:HTTPAuthorizationCredentials = Depends(secur
     token = credentials.credentials
     user_id = auth.decode_token(token)
 
+    if not user_id :
+        raise HTTPException(status_code=401,detail="unauthorized. ")
+    
     tasks = task_manager.fetch_tasks(user_id)
     if not tasks :
         raise HTTPException(status_code=400,detail="no tasks found")
@@ -78,7 +84,9 @@ def fetch_all_task_user(credentials:HTTPAuthorizationCredentials = Depends(secur
 def complete_tasks_api(task_id : int,credentials:HTTPAuthorizationCredentials=Depends(security)):
     token = credentials.credentials
     user_id = auth.decode_token(token)
-
+    if not user_id :
+        raise HTTPException(status_code=401,detail="unauthorized. ")
+    
     updated_task , error = task_manager.complete_task(user_id,task_id)
 
     if error:
@@ -94,7 +102,9 @@ def complete_tasks_api(task_id : int,credentials:HTTPAuthorizationCredentials=De
 def delete_task_api(task_id: int,credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_id = auth.decode_token(token)
-
+    if not user_id :
+        raise HTTPException(status_code=401,detail="unauthorized. ")
+    
     deleted_task, error = task_manager.delete_task(
         task_id,
         user_id

@@ -1,5 +1,5 @@
 from passlib.context import CryptContext
-from jose import jwt
+from jose import jwt,JWTError
 from datetime import datetime,timedelta
 import database
 
@@ -18,8 +18,11 @@ def create_token(user_id):
     return token
 
 def decode_token(token:str):
-    payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
-    return payload["user_id"]
+    try:
+        payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+        return payload["user_id"]
+    except JWTError:
+        return None
 
 def hashing_password(password):
     print("PASSWORD LENGTH:", len(password.encode("utf-8")))
