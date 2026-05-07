@@ -18,13 +18,13 @@ def add_task_logic(user_id,name,priority,due_date):
     data = database.insert_task_for_user(user_id,name,priority,due_date)
     return data,None
 
-def fetch_tasks(user_id):
-    tasks = database.get_all_tasks_by_user(user_id)
+# def fetch_tasks(user_id):
+#     tasks = database.get_all_tasks_by_user(user_id)
 
-    if tasks :
-        return tasks,None
-    else:
-        return None,(f"no tasks found for id {user_id}",404)
+#     if tasks :
+#         return tasks,None
+#     else:
+#         return None,(f"no tasks found for id {user_id}",404)
 
 def complete_task(user_id,task_id):
     
@@ -47,3 +47,38 @@ def delete_task(task_id, user_id):
         return None, ("Task not found", 404)
 
     return True, None
+
+def paginate_tasks(user_id,limit,offset):
+    if limit <= 0 :
+        return None,("Invalid limit request",400)
+    
+    if offset  < 0 :
+        return None,("invalid offset request",400)
+    
+    tasks,total = database.get_all_tasks_by_user(user_id,limit,offset)
+
+    if not tasks :
+        return tasks,("No tasks found",404)
+    
+    return [tasks,total],None
+
+def filter_task(user_id,priority,status):
+    if priority:
+        priority = priority.lower()
+
+        if priority not in {"high","low","medium"}:
+            return None,("Invalide priority",400)
+    
+    filtered_tasks = database.filter_user_tasks(user_id,priority,status)
+
+    return filtered_tasks,None
+
+def sort_tasks_by(user_id,by,order):
+    by = by.lower()
+
+    if by not in {"due_date","priority"}:
+        return None,("invalid sort criteria. ",400)
+    sorted_tasks = database.sort_user_tasks(user_id,by,order)
+
+    return sorted_tasks,None
+    

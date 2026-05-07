@@ -1,7 +1,8 @@
 from fastapi import FastAPI,HTTPException
 from fastapi import Depends
 from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
-from models import Usercreate,Userlogin,TaskCreate
+from typing import Optional,List
+from models import Usercreate,Userlogin,TaskCreate,filtertasks,sortCriteria
 import database
 import task_manager,auth
 
@@ -65,20 +66,64 @@ def add_task_api(task: TaskCreate, credentials: HTTPAuthorizationCredentials = D
     }
 
 @auth_app.get("/tasks",status_code=200)
-def fetch_all_task_user(credentials:HTTPAuthorizationCredentials = Depends(security)):
+def fetch_all_task_user(credentials:HTTPAuthorizationCredentials = Depends(security),limit : int = 10,offset : int = 0):
     token = credentials.credentials
     user_id = auth.decode_token(token)
 
     if not user_id :
         raise HTTPException(status_code=401,detail="unauthorized. ")
     
-    tasks = task_manager.fetch_tasks(user_id)
-    if not tasks :
-        raise HTTPException(status_code=400,detail="no tasks found")
-    return {
+    data,error = task_manager.paginate_tasks(user_id,limit,offset)
+    if error :
+        message,code = error
+        raise HTTPException(status_code=code,detail=message)
+    if data :
+        return {
         "message": "Tasks fetched successfully",
-        "data": tasks
+        "count": data[1],
+        "limit": limit,
+        "Offset": offset,
+        "data": data[0]
+        }
+@auth_app.get("/tasks/filter",status_code=200)
+def filter_tasks_user_api(filter_by: filtertasks = Depends(filtertasks), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_id = auth.decode_token(token)
+
+    if not user_id :
+        raise HTTPException(status_code=401,detail = "unauthorized.")
+    
+    filtered_data,error = task_manager.filter_task(user_id,filter_by.priority,filter_by.status)
+
+    if error :
+        message, code = error
+        raise HTTPException(status_code=code,detail=message)
+    
+    return {
+        "message": "Tasks filtered successfully. ",
+        "data": filtered_data
     }
+
+@auth_app.get("/tasks/sort",status_code=200)
+def sort_tasks_api(by:sortCriteria = Depends(sortCriteria),credentials : HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    
+    user_id = auth.decode_token(token)
+    if not user_id:
+        raise HTTPException(status_code=401,detail="unauthorized. ")
+    sorted_tasks,error = task_manager.sort_tasks_by(user_id,by.by,by.order)
+
+    if error :
+        message, code = error
+        raise HTTPException(status_code=code,detail=message)
+    
+    return {
+        "message": "Tasks sorted successfully. ",
+        "data": sorted_tasks
+    }
+
+
+
 
 @auth_app.patch("/tasks/{task_id}/complete",status_code=200)
 def complete_tasks_api(task_id : int,credentials:HTTPAuthorizationCredentials=Depends(security)):

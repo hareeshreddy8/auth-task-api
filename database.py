@@ -103,12 +103,14 @@ def insert_task_for_user(user_id,name,priority,due_date):
         "due_date": due_date
         }
 
-def get_all_tasks_by_user(user_id):
+def get_all_tasks_by_user(user_id,limit,offset):
     conn = get_connection_tasks()
 
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tasks WHERE user_id = ?",(user_id,))
+    cursor.execute("SELECT * FROM tasks WHERE user_id = ? LIMIT ? OFFSET ?",(user_id,limit,offset))
     rows = cursor.fetchall()
+    cursor.execute("SELECT COUNT(*) FROM tasks")
+    total = cursor.fetchone()[0]
 
     conn.close()
     tasks = []
@@ -125,7 +127,7 @@ def get_all_tasks_by_user(user_id):
         }
 
         tasks.append(task)
-    return tasks
+    return tasks,total
 
 def complete_task_by_user(user_id,task_id):
     conn = get_connection_tasks()
@@ -171,3 +173,86 @@ def delete_task_by_user(task_id,user_id):
 
     conn.close()
     return True
+
+
+def filter_user_tasks(user_id,priority,status):
+
+    conn = get_connection_tasks()
+    cursor = conn.cursor()
+
+    query = "SELECT * FROM tasks WHERE user_id = ?"
+    params = [user_id]
+
+    if priority :
+        query += "AND priority = ?"
+        params.append(priority)
+
+    if status is not None:
+        query += "AND status = ?"
+        params.append(status)
+
+    cursor.execute(query,tuple(params))
+
+    rows = cursor.fetchall()
+
+    conn.close()
+    tasks = []
+    #converting tuple data into json format for api
+    for row in rows:
+        task = {
+            
+            "id": row[0],
+            "user_id": row[1],
+            "name": row[2],
+            "priority": row[3],
+            "due_date": row[4],
+            "status": bool(row[5])
+        }
+
+        tasks.append(task)
+
+    return tasks
+
+def sort_user_tasks(user_id,by,order):
+    conn = get_connection_tasks()
+
+    cursor = conn.cursor()
+    # clean_order = "ASC" if order == "ASC" else "DESC"
+    if by == "priority":
+        query = f"""
+                    SELECT * FROM tasks WHERE user_id = ?
+                    ORDER BY 
+                    CASE priority
+                    WHEN 'high' THEN 1
+                    WHEN 'medium' THEN 2
+                    WHEN 'low' THEN 3
+                    END
+                    {order}
+                """
+        
+    else:
+        query = f"""SELECT * FROM tasks WHERE user_id = ? ORDER BY {by} {order}"""
+
+
+    cursor.execute(query,(user_id,))
+
+    rows = cursor.fetchall()
+
+    conn.close()
+
+    tasks = []
+    #converting tuple data into json format for api
+    for row in rows:
+        task = {
+            
+            "id": row[0],
+            "user_id": row[1],
+            "name": row[2],
+            "priority": row[3],
+            "due_date": row[4],
+            "status": bool(row[5])
+        }
+
+        tasks.append(task)
+
+    return tasks
