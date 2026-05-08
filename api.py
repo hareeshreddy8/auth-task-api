@@ -33,7 +33,7 @@ def login_user_request(user_details : Userlogin):
         user_details.password
     )
     if not user_id :
-        raise HTTPException(status_code=401,detail="unauthorized. ")
+        raise HTTPException(status_code=400,detail="invalid credentials.  ")
     if error:
         msg, code = error
         raise HTTPException(status_code=code, detail=msg)
@@ -161,4 +161,25 @@ def delete_task_api(task_id: int,credentials: HTTPAuthorizationCredentials = Dep
 
     return {
         "message": f"Task with task id {task_id} deleted successfully"
+    }
+
+@auth_app.get("/tasks/stats",status_code=200)
+def tasks_stats_api(credentials : HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+
+    user_id = auth.decode_token(token)
+
+    if not user_id:
+        raise HTTPException(status_code=401,detail="Unuthorized. ")
+    
+    stats,error = task_manager.stats_logic(user_id)
+
+    if error :
+        msg,code = error
+        raise HTTPException(status_code=code,detail=msg)
+    
+
+    return {
+        "message": "Stats obtained successfully. ",
+        "data": stats
     }

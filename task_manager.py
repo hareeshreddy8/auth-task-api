@@ -3,11 +3,6 @@ import database
 #logic to add task into database for specific user 
 
 def add_task_logic(user_id,name,priority,due_date):
-    all_userids = [u[1] for u in database.users()]
-
-    if user_id not in all_userids:
-        return None,("Invalid Userid. ",400)
-    
     if not name.strip():
         return None,("Invalid task name. ",400)
     
@@ -67,10 +62,11 @@ def filter_task(user_id,priority,status):
         priority = priority.lower()
 
         if priority not in {"high","low","medium"}:
-            return None,("Invalide priority",400)
+            return None,("Invalid priority",400)
     
     filtered_tasks = database.filter_user_tasks(user_id,priority,status)
-
+    if not filtered_tasks:
+        return filtered_tasks,("No tasks found.",404)
     return filtered_tasks,None
 
 def sort_tasks_by(user_id,by,order):
@@ -81,4 +77,14 @@ def sort_tasks_by(user_id,by,order):
     sorted_tasks = database.sort_user_tasks(user_id,by,order)
 
     return sorted_tasks,None
+    
+
+def stats_logic(user_id):
+    stats = database.tasks_statsistics_for_user(user_id)
+
+    if stats.get("total") != 0:
+        return stats,None
+    
+    return stats,("No tasks found. ",404)
+    
     
