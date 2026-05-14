@@ -109,7 +109,7 @@ def insert_task_for_user(user_id,name,priority,due_date):
 
     cursor = conn.cursor()
 
-    cursor.execute("INSERT INTO tasks (user_id,name,priority,due_date) VALUES (?,?,?,?)",(user_id,name,priority,due_date))
+    cursor.execute("INSERT INTO tasks (user_id,name,priority,due_date,created_at) VALUES (?,?,?,?,CURRENT_TIMESTAMP)",(user_id,name,priority,due_date))
     conn.commit()
 
     
