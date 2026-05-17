@@ -23,7 +23,7 @@ def add_task_logic(user_id,name,priority,due_date):
 
 def complete_task(user_id,task_id):
     
-    updated_task = database.complete_task_by_user(user_id,task_id)
+    updated_task = database.update_task_status_by_user(user_id,task_id)
 
     if not updated_task:
         return None,("No tasks found",404)
@@ -50,7 +50,7 @@ def paginate_tasks(user_id,limit,offset):
     if offset  < 0 :
         return None,("invalid offset request",400)
     
-    tasks,total = database.get_all_tasks_by_user(user_id,limit,offset)
+    tasks,total = database.select_tasks_by_user(user_id,limit,offset)
 
     if not tasks :
         return tasks,("No tasks found",404)
@@ -72,7 +72,7 @@ def filter_task(user_id,priority,status):
 def sort_tasks_by(user_id,by,order):
     by = by.lower()
 
-    if by not in {"due_date","priority"}:
+    if by not in {"due_date","priority","created_at"}:
         return None,("invalid sort criteria. ",400)
     sorted_tasks = database.sort_user_tasks(user_id,by,order)
 
@@ -80,7 +80,7 @@ def sort_tasks_by(user_id,by,order):
     
 
 def stats_logic(user_id):
-    stats = database.tasks_statsistics_for_user(user_id)
+    stats = database.tasks_statistics_for_user(user_id)
 
     if stats.get("total") != 0:
         return stats,None

@@ -1,19 +1,29 @@
 import sqlite3
 def convert_rows_into_tasks(rows):
     tasks = []
-    for row in rows :
-        tasks = []
     #converting tuple data into json format for api
     for row in rows:
-        task = {
+        if  len(row) == 6 :
+            task = {
             
             "id": row[0],
-            "user_id": row[1],
-            "name":row[2],
-            "priority": row[3],
-            "due_date": row[4],
-            "status": bool(row[5])
-        }
+            "name": row[1],
+            "priority": row[2],
+            "due_date": row[3],
+            "status": bool(row[4]),
+            "username": row[5]
+            }
+
+        else:
+            task = {
+            
+                "id": row[0],
+                "user_id": row[1],
+                "name":row[2],
+                "priority": row[3],
+                "due_date": row[4],
+                "status": bool(row[5])
+            }
 
         tasks.append(task)
 
@@ -69,7 +79,7 @@ def insert_user(username,password):
     }
 
 
-def get_user_by_username(username):
+def select_user_by_username(username):
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -121,7 +131,7 @@ def insert_task_for_user(user_id,name,priority,due_date):
         "due_date": due_date
         }
 
-def get_all_tasks_by_user(user_id,limit,offset):
+def select_tasks_by_user(user_id,limit,offset):
     conn = get_connection()
 
     cursor = conn.cursor()
@@ -141,23 +151,13 @@ def get_all_tasks_by_user(user_id,limit,offset):
     total = cursor.fetchone()[0]
 
     conn.close()
-    tasks = []
-    #converting tuple data into json format for api
-    for row in rows:
-        task = {
-            
-            "id": row[0],
-            "name": row[1],
-            "priority": row[2],
-            "due_date": row[3],
-            "status": bool(row[4]),
-            "username": row[5]
-        }
+    if rows:
+        tasks = convert_rows_into_tasks(rows)
+        return tasks,total
+    
+    return None,total
 
-        tasks.append(task)
-    return tasks,total
-
-def complete_task_by_user(user_id,task_id):
+def update_task_status_by_user(user_id,task_id):
     conn = get_connection()
 
     cursor = conn.cursor()
@@ -174,15 +174,8 @@ def complete_task_by_user(user_id,task_id):
     row = cursor.fetchone()
     conn.close()
     if row:
-        return {
-            
-            "id": row[0],
-            "user_id": row[1],
-            "name":row[2],
-            "priority": row[3],
-            "due_date": row[4],
-            "status": bool(row[5])
-        }
+        task = convert_rows_into_tasks(row)
+        return task
     return None
 
 def delete_task_by_user(task_id,user_id):
@@ -225,9 +218,11 @@ def filter_user_tasks(user_id,priority,status):
     rows = cursor.fetchall()
 
     conn.close()
-    tasks = convert_rows_into_tasks(rows)
+    if rows:
+        tasks = convert_rows_into_tasks(rows)
 
-    return tasks
+        return tasks
+    return None
 
 def sort_user_tasks(user_id,by,order):
     conn = get_connection()
@@ -260,7 +255,7 @@ def sort_user_tasks(user_id,by,order):
     return tasks
 
 
-def tasks_statsistics_for_user(user_id):
+def tasks_statistics_for_user(user_id):
     conn = get_connection()
     cursor = conn.cursor()
 

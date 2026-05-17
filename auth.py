@@ -62,7 +62,7 @@ def signup_user(username,password):
 
 def login_user(username,password):
 
-    user_details = database.get_user_by_username(username)
+    user_details = database.select_user_by_username(username)
 
     if not user_details:
         return None,("invalid credentials. ",400)

@@ -27,7 +27,7 @@ def signup_user_api(user_details : Usercreate):
     }
 
 @auth_app.post("/login",status_code=200)
-def login_user_request(user_details : Userlogin):
+def login_user_api(user_details : Userlogin):
     user_id, error = auth.login_user(
         user_details.username,
         user_details.password
@@ -66,7 +66,7 @@ def add_task_api(task: TaskCreate, credentials: HTTPAuthorizationCredentials = D
     }
 
 @auth_app.get("/tasks",status_code=200)
-def fetch_all_task_user(credentials:HTTPAuthorizationCredentials = Depends(security),limit : int = 10,offset : int = 0):
+def fetch_tasks_api(credentials:HTTPAuthorizationCredentials = Depends(security),limit : int = 10,offset : int = 0):
     token = credentials.credentials
     user_id = auth.decode_token(token)
 
@@ -126,7 +126,7 @@ def sort_tasks_api(by:sortCriteria = Depends(sortCriteria),credentials : HTTPAut
 
 
 @auth_app.patch("/tasks/{task_id}/complete",status_code=200)
-def complete_tasks_api(task_id : int,credentials:HTTPAuthorizationCredentials=Depends(security)):
+def update_tasks_api(task_id : int,credentials:HTTPAuthorizationCredentials=Depends(security)):
     token = credentials.credentials
     user_id = auth.decode_token(token)
     if not user_id :

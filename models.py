@@ -21,7 +21,7 @@ class filtertasks(BaseModel):
     status : Optional[bool] = None
 
 class sortCriteria(BaseModel):
-    by : Literal["due_date", "priority"] = "due_date"
+    by : Literal["due_date", "priority","created_at"] = "due_date"
     order : Literal["ASC","DESC"] = "ASC"
 
 
