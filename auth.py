@@ -49,7 +49,7 @@ def signup_user(username,password):
     
     usernames = [u[0] for u in database.users()]
     if username in usernames:
-        return None,("Username already exists",400)
+        return None,("Username already exists",409)
     
     password = hashing_password(password)
     if not password:
@@ -74,5 +74,5 @@ def login_user(username,password):
         
         
     else:
-        return None,("invalid credentials. ",400)
+        return None,("invalid credentials. ",401)
     

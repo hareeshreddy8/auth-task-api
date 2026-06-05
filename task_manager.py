@@ -53,7 +53,7 @@ def paginate_tasks(user_id,limit,offset):
     tasks,total = database.select_tasks_by_user(user_id,limit,offset)
 
     if not tasks :
-        return tasks,("No tasks found",404)
+        return tasks,("No tasks found",204)
     
     return [tasks,total],None
 
@@ -66,7 +66,7 @@ def filter_task(user_id,priority,status):
     
     filtered_tasks = database.filter_user_tasks(user_id,priority,status)
     if not filtered_tasks:
-        return filtered_tasks,("No tasks found.",404)
+        return filtered_tasks,("No tasks found.",204)
     return filtered_tasks,None
 
 def sort_tasks_by(user_id,by,order):

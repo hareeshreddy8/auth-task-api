@@ -13,8 +13,8 @@ database.create_table_tasks()
 auth_app = FastAPI()
 security = HTTPBearer()
 
-@auth_app.post("/users",status_code=200)
-def signup_user_api(user_details : Usercreate):
+@auth_app.post("/signup",status_code=201)
+def signup_user_api(user_details : Usercreate = Depends(Usercreate)):
     data, error = auth.signup_user(user_details.username,user_details.password)
 
     if error :
@@ -143,7 +143,7 @@ def update_tasks_api(task_id : int,credentials:HTTPAuthorizationCredentials=Depe
         "data": updated_task
     }
 
-@auth_app.delete("/tasks/{task_id}", status_code=200)
+@auth_app.delete("/tasks/{task_id}", status_code=204)
 def delete_task_api(task_id: int,credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_id = auth.decode_token(token)
