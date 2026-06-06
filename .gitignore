@@ -5,3 +5,4 @@ app.db
 sql_notes.md
 __pycache__
 .pytest_cache
+learnings.md
