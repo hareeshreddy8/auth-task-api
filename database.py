@@ -171,7 +171,7 @@ def update_task_status_by_user(user_id,task_id):
     conn.commit()
 
     cursor.execute("""SELECT * FROM tasks WHERE user_id = ? AND id = ?""",(user_id,task_id))
-    row = cursor.fetchone()
+    row = cursor.fetchall()
     conn.close()
     if row:
         task = convert_rows_into_tasks(row)

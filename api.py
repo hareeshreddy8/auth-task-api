@@ -27,7 +27,7 @@ def signup_user_api(user_details : Usercreate = Depends(Usercreate)):
     }
 
 @auth_app.post("/login",status_code=200)
-def login_user_api(user_details : Userlogin):
+def login_user_api(user_details : Userlogin = Depends(Userlogin)):
     user_id, error = auth.login_user(
         user_details.username,
         user_details.password
