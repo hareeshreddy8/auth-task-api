@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 .env
 app.db
+test.db
 sql_notes.md
 __pycache__
 .pytest_cache

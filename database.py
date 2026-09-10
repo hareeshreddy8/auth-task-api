@@ -1,4 +1,5 @@
 import sqlite3
+import os
 def convert_rows_into_tasks(rows):
     tasks = []
     #converting tuple data into json format for api
@@ -30,7 +31,10 @@ def convert_rows_into_tasks(rows):
     return tasks
 
 def get_connection():
-    conn = sqlite3.connect("app.db")
+    if os.getenv("Testing"):
+        conn = sqlite3.connect("test.db")
+    else:
+        conn = sqlite3.connect("app.db")
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 def create_table_users():
@@ -119,7 +123,7 @@ def insert_task_for_user(user_id,name,priority,due_date):
 
     cursor = conn.cursor()
 
-    cursor.execute("INSERT INTO tasks (user_id,name,priority,due_date,created_at) VALUES (?,?,?,?,CURRENT_TIMESTAMP)",(user_id,name,priority,due_date))
+    cursor.execute("INSERT INTO tasks (user_id,name,priority,due_date) VALUES (?,?,?,?)",(user_id,name,priority,due_date))
     conn.commit()
 
     
