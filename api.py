@@ -77,7 +77,7 @@ def fetch_tasks_api(credentials:HTTPAuthorizationCredentials = Depends(security)
     if error :
         message,code = error
         raise HTTPException(status_code=code,detail=message)
-    if data :
+    if data:
         return {
         "message": "Tasks fetched successfully",
         "count": data[1],

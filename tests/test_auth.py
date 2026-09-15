@@ -1,36 +1,47 @@
 from fastapi.testclient import TestClient
 import os
-os.environ["Testing"] = "Testing"
+import pytest
+import database
 
-if os.path.exists("test.db"):
-    os.remove("test.db")
+@pytest.fixture
+def reset_db():
+    os.environ["Testing"] = "Testing"
+
+    if os.path.exists("test.db"):
+        os.remove("test.db")
+
+    database.create_table_users()
+    database.create_table_tasks()
 
 from api import auth_app
 
 client = TestClient(auth_app)
 
-import pytest
 
 @pytest.fixture
-def auth_token():
+def auth_token(reset_db):
     signup = client.post(
         "/signup",
         params={
-            "username": "harees",
+            "username": "test",
             "password": "abc12344"
         }
     )
-
+    assert signup.status_code == 201
     login = client.post(
         "/login",
         params={
-            "username": "harees",
+            "username": "test",
             "password": "abc12344"
         }
     )
 
+    assert login.status_code == 200
     return login.json()["access_token"]
-def test_insert_task(auth_token):
+
+
+@pytest.fixture
+def task(auth_token):
 
     headers = {
         "Authorization": f"Bearer {auth_token}"
@@ -46,6 +57,65 @@ def test_insert_task(auth_token):
         headers=headers
     )
 
+    assert request.status_code == 200
     print(request.json())
+    return request.json()
+
+
+
+def test_delete_task(auth_token, task):
+    task_id = task["data"]["id"]
+
+    request = client.delete(
+        f"/tasks/{task_id}",
+        headers= {
+        "Authorization": f"Bearer {auth_token}"
+    }
+    )
+    assert request.status_code == 204
+
+def test_complete_task(auth_token, task):
+    task_id = task["data"]["id"]
+
+    header = {
+        "Authorization" : f"Bearer {auth_token}"
+    }
+
+    request = client.patch(
+        f"/tasks/{task_id}/complete",
+        headers=header
+    )
+    assert request.status_code == 200
+
+
+
+def test_get_tasks(auth_token, task):
+
+    second_task = client.post(
+        "/tasks",
+        headers=
+        {
+            "Authorization": f"Bearer {auth_token}"
+        },
+        json={
+            "name": "project2",
+            "priority": "low",
+            "due_date": "2026-09-10"
+        }
+    )
+    request = client.get(
+        "/tasks",
+        headers=
+        {
+            "Authorization" : f"Bearer {auth_token}"
+        },
+        params=
+        {
+            "limit":1,
+            "offset":1
+        }
+    )
 
     assert request.status_code == 200
+    assert request.json()["count"] == 2
+    assert request.json()["data"][0]["id"] == second_task.json()["data"]["id"]

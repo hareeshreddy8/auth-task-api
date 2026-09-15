@@ -56,7 +56,7 @@ def users():
     cursor = conn.cursor()
     cursor.execute("""SELECT username,id FROM users """)
     all_users = cursor.fetchall()
-
+    conn.close()
     return all_users
 
 def insert_user(username,password):
@@ -126,14 +126,20 @@ def insert_task_for_user(user_id,name,priority,due_date):
     cursor.execute("INSERT INTO tasks (user_id,name,priority,due_date) VALUES (?,?,?,?)",(user_id,name,priority,due_date))
     conn.commit()
 
-    
+    cursor.execute("""SELECT * FROM tasks JOIN users ON tasks.user_id = users.id 
+                   WHERE tasks.name = ? AND tasks.priority = ? AND tasks.due_date = ?""",(name,priority,due_date))
+    row = cursor.fetchone()
     conn.close()
 
-    return {"user_id" : user_id,
-        "name" : name,
-        "priority": priority,
-        "due_date": due_date
-        }
+    return {
+        "id": row[0],
+        "user_id": row[1],
+        "name":row[2],
+        "priority": row[3],
+        "due_date": row[4],
+        "status": bool(row[5])
+        
+    }
 
 def select_tasks_by_user(user_id,limit,offset):
     conn = get_connection()
