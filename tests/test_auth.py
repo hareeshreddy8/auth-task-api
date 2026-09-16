@@ -119,3 +119,105 @@ def test_get_tasks(auth_token, task):
     assert request.status_code == 200
     assert request.json()["count"] == 2
     assert request.json()["data"][0]["id"] == second_task.json()["data"]["id"]
+
+
+def test_filter_tasks_by_priority(auth_token,task):
+
+    second_task = client.post(
+            "/tasks",
+            headers=
+            {
+                "Authorization": f"Bearer {auth_token}"
+            },
+            json={
+                "name": "project2",
+                "priority": "low",
+                "due_date": "2026-09-10"
+            }
+        )
+    
+    header = {
+        "Authorization" : f"Bearer {auth_token}"
+    }
+
+    request = client.request(
+        "GET",
+        "/tasks/filter",
+        headers= {
+        "Authorization" : f"Bearer {auth_token}"
+    },
+        params={
+            "priority" : "low"
+        }
+    )
+
+    assert request.status_code == 200
+    print(request.json())
+
+
+def test_filter_tasks_by_status(auth_token,task):
+
+    client.post(
+            "/tasks",
+            headers=
+            {
+                "Authorization": f"Bearer {auth_token}"
+            },
+            json={
+                "name": "project2",
+                "priority": "low",
+                "due_date": "2026-09-10"
+            }
+        )
+    task_id = task["data"]["id"]
+    complete_task = client.patch(
+        f"/tasks/{task_id}/complete",
+        headers={
+            "Authorization": f"Bearer {auth_token}"
+        }
+    )
+
+
+    request = client.request(
+        "GET",
+        "/tasks/filter",
+        headers= {
+        "Authorization" : f"Bearer {auth_token}"
+    },
+        params={
+            "status":True
+        }
+    )
+
+    assert request.status_code == 200
+    assert request.json()["data"][0]["id"] == task_id
+    print("status",request.json())
+
+
+def test_sort_tasks(auth_token,task):
+    client.post(
+            "/tasks",
+            headers=
+            {
+                "Authorization": f"Bearer {auth_token}"
+            },
+            json={
+                "name": "project2",
+                "priority": "low",
+                "due_date": "2026-09-10"
+            }
+        )
+
+    task_id = task["data"]["id"]
+
+    request = client.get(
+        "/tasks/sort",
+        params={
+            "by":"priority"
+        },
+        headers={
+            "Authorization":f"Bearer {auth_token}"
+        }
+    )
+    assert request.status_code == 200
+    print(request.json())

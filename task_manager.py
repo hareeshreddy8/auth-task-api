@@ -72,7 +72,7 @@ def filter_task(user_id,priority,status):
 def sort_tasks_by(user_id,by,order):
     by = by.lower()
 
-    if by not in {"due_date","priority","created_at"}:
+    if by not in {"due_date","priority"}:
         return None,("invalid sort criteria. ",400)
     sorted_tasks = database.sort_user_tasks(user_id,by,order)
 

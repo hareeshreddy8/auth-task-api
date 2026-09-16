@@ -8,11 +8,11 @@ def convert_rows_into_tasks(rows):
             task = {
             
             "id": row[0],
-            "name": row[1],
-            "priority": row[2],
-            "due_date": row[3],
-            "status": bool(row[4]),
-            "username": row[5]
+            "user_id":row[1],
+            "name": row[2],
+            "priority": row[3],
+            "due_date": row[4],
+            "status": bool(row[5]),
             }
 
         else:
