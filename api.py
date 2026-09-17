@@ -32,11 +32,11 @@ def login_user_api(user_details : Userlogin = Depends(Userlogin)):
         user_details.username,
         user_details.password
     )
-    if not user_id :
-        raise HTTPException(status_code=400,detail="invalid credentials.  ")
     if error:
         msg, code = error
         raise HTTPException(status_code=code, detail=msg)
+    if not user_id :
+        raise HTTPException(status_code=400,detail="invalid credentials.  ")
 
     token = auth.create_token(user_id)
 

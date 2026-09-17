@@ -58,7 +58,7 @@ def task(auth_token):
     )
 
     assert request.status_code == 200
-    print(request.json())
+    # print(request.json())
     return request.json()
 
 
@@ -152,7 +152,7 @@ def test_filter_tasks_by_priority(auth_token,task):
     )
 
     assert request.status_code == 200
-    print(request.json())
+    # print(request.json())
 
 
 def test_filter_tasks_by_status(auth_token,task):
@@ -191,7 +191,7 @@ def test_filter_tasks_by_status(auth_token,task):
 
     assert request.status_code == 200
     assert request.json()["data"][0]["id"] == task_id
-    print("status",request.json())
+    # print("status",request.json())
 
 
 def test_sort_tasks(auth_token,task):
@@ -220,4 +220,70 @@ def test_sort_tasks(auth_token,task):
         }
     )
     assert request.status_code == 200
-    print(request.json())
+    # print(request.json())
+
+def test_tasks_stats(auth_token,task):
+    client.post(
+            "/tasks",
+            headers=
+            {
+                "Authorization": f"Bearer {auth_token}"
+            },
+            json={
+                "name": "project2",
+                "priority": "low",
+                "due_date": "2026-09-10"
+            }
+        )
+
+
+    request = client.get(
+        "/tasks/stats",
+        headers={
+            "Authorization":f"Bearer {auth_token}"
+        }
+    )
+
+    assert request.status_code == 200
+    assert request.json()["data"]["total"] == 2
+
+def test_get_unauthorized():
+    request = client.get(
+        "/tasks"
+    )
+    # print(request.status_code)
+    assert request.json()["detail"] == 'Not authenticated'
+    assert request.status_code == 401
+
+def test_gets_an_invalid_token():
+    request = client.get(
+        "/tasks",
+        headers={
+            "Authorization":f"Bearer Invalid_token"
+        }
+    )
+    # print(request.status_code)
+    # print(request.json())
+    assert request.status_code == 401
+    assert request.json()["detail"] == 'unauthorized. ' 
+
+
+def test_authorization():
+    client.post(
+        "/signup",
+        params={
+            "username":"user",
+            "password":"12345"
+        })
+
+    request = client.post(
+        "/login",
+        params={
+            "username":"user",
+            "password":"1234"
+        }
+    )
+    # print(request.status_code)
+    # print(request.json())
+    assert request.status_code == 401
+    assert request.json()["detail"] == 'invalid credentials. '
